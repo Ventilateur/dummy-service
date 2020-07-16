@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  default:
+    image: sample-svc
+    build: .
+    ports:
+      - 9000:8080
+    environment:
+      LISTEN_PATH: '/rest'
+      RESP_MSG: 'hello from default svc'
+  variant-a:
+    image: sample-svc
+    build: .
+    ports:
+      - 9001:8080
+    environment:
+      LISTEN_PATH: '/rest'
+      RESP_MSG: 'hello from variant AAA'
+  variant-b:
+    image: sample-svc
+    build: .
+    ports:
+      - 9002:8080
+    environment:
+      LISTEN_PATH: '/rest'
+      RESP_MSG: 'hello from variant BBB'
+
