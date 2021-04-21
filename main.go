@@ -3,36 +3,43 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	path = "/rest"
-	msg = "default"
-)
-
 type Response struct {
-	RequestHeader http.Header`json:"request_header"`
-	Message string
+	RequestHeader http.Header `json:"requestHeader"`
+	RemoteAddr    string      `json:"remoteAddr"`
 }
-func init() {
-	if p := os.Getenv("LISTEN_PATH"); p != "" {
-		path = p
+
+type ErrorResponse = struct {
+	Message string `json:"message"`
+}
+
+func handler(c *gin.Context) {
+	code, err := strconv.Atoi(c.Param("code"))
+	if err != nil || code < 100 || code > 599 {
+		c.AbortWithStatusJSON(
+			http.StatusNotFound,
+			ErrorResponse{Message: "Request path must start with a valid HTTP code"},
+		)
 	}
-	if m := os.Getenv("RESP_MSG"); m != "" {
-		msg = m
-	}
+
+	c.JSON(code, &Response{
+		RequestHeader: c.Request.Header,
+		RemoteAddr:    c.ClientIP(),
+	})
 }
 
 func main() {
 	r := gin.Default()
-	r.GET(path, func(c *gin.Context) {
-		c.JSON(200, &Response{
-			RequestHeader: c.Request.Header,
-			Message: msg,
-		})
-	})
+	r.GET("/:code/*path", handler)
+	r.HEAD("/:code/*path", handler)
+	r.POST("/:code/*path", handler)
+	r.PUT("/:code/*path", handler)
+	r.DELETE("/:code/*path", handler)
+	r.OPTIONS("/:code/*path", handler)
+	r.PATCH("/:code/*path", handler)
 	log.Fatal(r.Run())
 }
